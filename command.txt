@@ -1,0 +1,21 @@
+go version
+
+//Bee installation
+
+go get github.com/beego/beego/v2  'or'
+go install github.com/beego/bee/v2@latest
+
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
+source ~/.bashrc
+
+// version compatibility
+go mod tidy
+
+bee version
+
+
+//creating new app
+
+bee new mybeegoapp
+cd mybeegoapp
+bee run   'or'  go run main.go
