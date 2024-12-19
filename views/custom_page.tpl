@@ -111,7 +111,7 @@
   if (images && images.length > 0) {
     // Extract breed information from the first image's breed data
     const breedInfo = images[0].breeds[0] || {};
-    
+    console.log(breedInfo);
     // Update breed details section
     breedDetails.querySelector("#breed-name").textContent = breedInfo.name || "N/A";
     breedDetails.querySelector("#breed-origin").textContent = `Origin: ${breedInfo.origin || "Unknown"}`;
@@ -119,8 +119,8 @@
     breedDetails.querySelector("#breed-description").textContent = breedInfo.description || "No description available.";
 
     // Handle the Wikipedia link
-    const wikiLink = breedInfo.wikipedia || "#"; // Default to "#" if the link is missing
-    const wikiText = breedInfo.wikipedia ? "Wikipedia" : "No Wikipedia Link";
+    const wikiLink = breedInfo.wikipedia_url || "#"; // Default to "#" if the link is missing
+    const wikiText = breedInfo.wikipedia_url ? "Wikipedia" : "No Wikipedia Link";
     
     breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
     breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
