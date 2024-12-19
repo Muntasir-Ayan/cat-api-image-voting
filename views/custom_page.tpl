@@ -25,11 +25,11 @@
   <body>
     <div class="container">
       <div class="nav">
-        <a href="http://localhost:8080/custom">Voting</a>
-        <a href="#" id="breeds-button"
-          ><i class="fa-solid fa-magnifying-glass breeds"> Breeds</i></a
+        <button href="http://localhost:8080/custom" id="voting-button" >Voting</button>
+        <button href="#" id="breeds-button"
+          ><i class="fa-solid fa-magnifying-glass breeds"> Breeds</i></button
         >
-        <a href="#"><i class="fa-regular fa-heart favs">Favs</i></a>
+        <button href="#"><i class="fa-regular fa-heart favs">Favs</i></button>
       </div>
 
       <!-- Image Section -->
@@ -60,107 +60,139 @@
 
       <!-- Footer Section -->
       <div class="footer nav">
-        <a href="#" class="favs-down"><i class="fa-regular fa-heart"></i></a>
-        <a href="#" class="thumbs-up"
+        <button href="#" class="favs-down"><i class="fa-regular fa-heart"></i></button>
+        <button href="#" class="thumbs-up"
           ><i class="fa-regular fa-thumbs-up"></i
-        ></a>
-        <a href="#" class="thumbs-down"
+        ></button>
+        <button href="#" class="thumbs-down"
           ><i class="fa-regular fa-thumbs-down"></i
-        ></a>
+        ></button>
       </div>
     </div>
 
     <!-- JavaScript Section -->
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const breedsButton = document.querySelector("#breeds-button");
-        const breedsSection = document.querySelector("#breeds-section");
-        const breedSelect = document.getElementById("breed-select");
-        const breedDetails = document.getElementById("breed-details");
-        const breedImages = document.getElementById("breed-images");
-        const footerNav = document.querySelector(".footer.nav");
-        const imageContainer = document.querySelector(".image-container");
+document.addEventListener("DOMContentLoaded", () => {
+  const breedsButton = document.querySelector("#breeds-button");
+  const breedsSection = document.querySelector("#breeds-section");
+  const breedSelect = document.getElementById("breed-select");
+  const breedDetails = document.getElementById("breed-details");
+  const breedImages = document.getElementById("breed-images");
+  const footerNav = document.querySelector(".footer.nav");
+  const imageContainer = document.querySelector(".image-container");
+  const catImageElement = document.querySelector(".cat-image");
+  const favsDownButton = document.querySelector(".favs-down");
+  const thumbsUpButton = document.querySelector(".thumbs-up");
+  const thumbsDownButton = document.querySelector(".thumbs-down");
+  
 
-        // Toggle Breeds Section and Hide Other Sections
-// Toggle Breeds Section and Hide Other Sections
-breedsButton.addEventListener("click", (event) => {
-  event.preventDefault();
+  
+  // Toggle Breeds Section and Hide Other Sections
+  breedsButton.addEventListener("click", (event) => {
+    event.preventDefault();
 
-  // Always show the breeds section
-  breedsSection.style.display = "block";
+    // Always show the breeds section
+    breedsSection.style.display = "block";
 
-  // Hide the footer and image container
-  footerNav.style.display = "none";
-  imageContainer.style.display = "none";
+    // Hide the footer and image container
+    footerNav.style.display = "none";
+    imageContainer.style.display = "none";
 
-  // Load breeds only if they haven't been loaded yet
-  if (breedSelect.options.length === 0) {
-    loadBreeds(); // Load breeds when showing the breeds section for the first time
-  }
+    // Load breeds only if they haven't been loaded yet
+    if (breedSelect.options.length === 0) {
+      loadBreeds(); // Load breeds when showing the breeds section for the first time
+    }
+  });
+
+  // Load breeds into the dropdown
+  const loadBreeds = async () => {
+    const response = await fetch("/custom/breeds");
+    const breeds = await response.json();
+
+    breedSelect.innerHTML = breeds
+      .map((breed) => `<option value="${breed.id}">${breed.name}</option>`)
+      .join("");
+    breedSelect.value = "abys"; // Set initial breed to Abyssinian (or the ID of the breed you want as default)
+
+    loadBreedDetails(breedSelect.value); // Load initial breed details
+  };
+
+  // Load breed details including images and information
+  const loadBreedDetails = async (breedID) => {
+    const response = await fetch(`/custom/breed_images?breed_id=${breedID}`);
+    const images = await response.json();
+
+    if (images && images.length > 0) {
+      const breedInfo = images[0].breeds[0] || {};
+
+      // Update breed details section
+      breedDetails.querySelector("#breed-name").textContent =
+        breedInfo.name || "N/A";
+      breedDetails.querySelector("#breed-origin").textContent = `Origin: ${
+        breedInfo.origin || "Unknown"
+      }`;
+      breedDetails.querySelector("#breed-id").textContent = `ID: ${breedID}`;
+      breedDetails.querySelector("#breed-description").textContent =
+        breedInfo.description || "No description available.";
+
+      // Handle the Wikipedia link
+      const wikiLink = breedInfo.wikipedia_url || "#";
+      const wikiText = breedInfo.wikipedia_url
+        ? "Wikipedia"
+        : "No Wikipedia Link";
+
+      breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
+      breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
+
+      // Display breed images in the sliding window
+      breedImages.innerHTML = images
+        .map(
+          (img) =>
+            `<img src="${img.url}" alt="${breedInfo.name}" class="slider-image">`
+        )
+        .join("");
+    } else {
+      breedDetails.querySelector("#breed-wikipedia").href = "#";
+      breedDetails.querySelector("#breed-wikipedia").textContent =
+        "No images found for this breed";
+    }
+  };
+
+  // Handle change in breed selection
+  breedSelect.addEventListener("change", (event) => {
+    loadBreedDetails(event.target.value);
+  });
+
+  // Function to change the cat image
+  const changeCatImage = async () => {
+    const response = await fetch("/custom");
+    const data = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data, "text/html");
+    const newImageSrc = doc.querySelector(".cat-image")?.src;
+
+    if (newImageSrc && catImageElement) {
+      catImageElement.src = newImageSrc;
+    }
+  };
+
+  // Event listeners for footer buttons
+  favsDownButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    changeCatImage();
+  });
+
+  thumbsUpButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    changeCatImage();
+  });
+
+  thumbsDownButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    changeCatImage();
+  });
+
 });
-
-
-        // Load breeds into the dropdown
-        const loadBreeds = async () => {
-          const response = await fetch("/custom/breeds");
-          const breeds = await response.json();
-
-          breedSelect.innerHTML = breeds
-            .map(
-              (breed) => `<option value="${breed.id}">${breed.name}</option>`
-            )
-            .join("");
-          breedSelect.value = "abys"; // Set initial breed to Abyssinian (or the ID of the breed you want as default)
-
-          loadBreedDetails(breedSelect.value); // Load initial breed details
-        };
-
-        // Load breed details including images and information
-        const loadBreedDetails = async (breedID) => {
-          const response = await fetch(`/custom/breed_images?breed_id=${breedID}`);
-          const images = await response.json();
-
-          if (images && images.length > 0) {
-            const breedInfo = images[0].breeds[0] || {};
-
-            // Update breed details section
-            breedDetails.querySelector("#breed-name").textContent =
-              breedInfo.name || "N/A";
-            breedDetails.querySelector("#breed-origin").textContent = `Origin: ${
-              breedInfo.origin || "Unknown"
-            }`;
-            breedDetails.querySelector("#breed-id").textContent = `ID: ${breedID}`;
-            breedDetails.querySelector("#breed-description").textContent =
-              breedInfo.description || "No description available.";
-
-            // Handle the Wikipedia link
-            const wikiLink = breedInfo.wikipedia_url || "#";
-            const wikiText = breedInfo.wikipedia_url
-              ? "Wikipedia"
-              : "No Wikipedia Link";
-
-            breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
-            breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
-
-            // Display breed images in the sliding window
-            breedImages.innerHTML = images
-              .map(
-                (img) =>
-                  `<img src="${img.url}" alt="${breedInfo.name}" class="slider-image">`
-              )
-              .join("");
-          } else {
-            breedDetails.querySelector("#breed-wikipedia").href = "#";
-            breedDetails.querySelector("#breed-wikipedia").textContent =
-              "No images found for this breed";
-          }
-        };
-
-        // Handle change in breed selection
-        breedSelect.addEventListener("change", (event) => {
-          loadBreedDetails(event.target.value);
-        });
-      });
     </script>
   </body>
 </html>
