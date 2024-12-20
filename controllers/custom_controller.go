@@ -45,6 +45,24 @@ type BreedImage struct {
 	} `json:"breeds"`
 }
 
+type Image struct {
+	URL string `json:"url,omitempty"` // Or any other fields that may be present in the future
+}
+
+type Favourite struct {
+	ImageID string `json:"image_id"`
+	SubID   string `json:"sub_id,omitempty"` // Optional user ID
+}
+
+type FavouriteResponse struct {
+	ID        int      `json:"id"`
+	UserID    string   `json:"user_id"`
+	ImageID   string   `json:"image_id"`
+	SubID     *string  `json:"sub_id,omitempty"`
+	CreatedAt string   `json:"created_at"`
+	Image     Image    `json:"image"` // Nested Image struct
+}
+
 type CustomController struct {
 	beego.Controller
 }
@@ -112,7 +130,6 @@ func (c *CustomController) GetBreeds() {
 	c.ServeJSON()
 }
 
-// Fetches images and details for a specific breed
 // Fetches images and details for a specific breed
 func (c *CustomController) GetBreedImages() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
@@ -227,8 +244,88 @@ func (c *CustomController) GetVotes() {
 	c.ServeJSON()
 }
 
+// CreateFavourite: Handle the creation of a favourite
+func (c *CustomController) CreateFavourite() {
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	imageID := c.GetString("image_id")
+	subID := c.GetString("sub_id") // Optional user ID
 
+	if imageID == "" {
+		c.CustomAbort(http.StatusBadRequest, "Image ID is required")
+		return
+	}
 
+	url := "https://api.thecatapi.com/v1/favourites"
+	fav := Favourite{
+		ImageID: imageID,
+		SubID:   subID,
+	}
+
+	favData, _ := json.Marshal(fav)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(favData))
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to create favourite")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	var favResponse FavouriteResponse
+	if err := json.Unmarshal(body, &favResponse); err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to parse response")
+		return
+	}
+
+	c.Data["json"] = favResponse
+	c.ServeJSON()
+}
+
+// GetFavourites: Fetch all favourites for the user
+func (c *CustomController) GetFavourites() {
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	url := "https://api.thecatapi.com/v1/favourites"
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch favourites")
+		return
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Printf("Error: %s\nResponse: %s\n", resp.Status, string(body))
+		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch favourites")
+		return
+	}
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	// Log the raw response body
+	fmt.Println("API Response Body:", string(body))
+
+	var favourites []FavouriteResponse
+	if err := json.Unmarshal(body, &favourites); err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to parse favourites")
+		return
+	}
+
+	// Log parsed favourites to make sure it's working
+	fmt.Println("Parsed Favourites:", favourites)
+
+	c.Data["json"] = favourites
+	c.ServeJSON()
+}
 
 // Error handling for XMLHttpRequest
 func (c *CustomController) handleError(err error) {

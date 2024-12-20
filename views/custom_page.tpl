@@ -231,40 +231,73 @@
         }
       });
 
-
       document.addEventListener("DOMContentLoaded", () => {
-  const thumbsUpButton = document.querySelector(".thumbs-up");
-  const thumbsDownButton = document.querySelector(".thumbs-down");
+        const thumbsUpButton = document.querySelector(".thumbs-up");
+        const thumbsDownButton = document.querySelector(".thumbs-down");
+        const favsDownButton = document.querySelector(".favs-down"); // Favs button
 
-  const sendVote = async (imageID, value) => {
-    const response = await fetch("/custom/vote", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ image_id: imageID, value: value }),
-    });
+        const sendVote = async (imageID, value) => {
+          const response = await fetch("/custom/vote", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ image_id: imageID, value: value }),
+          });
 
-    if (response.ok) {
-      console.log("Vote submitted successfully");
-    } else {
-      console.error("Failed to submit vote");
-    }
-  };
+          if (response.ok) {
+            console.log("Vote submitted successfully");
+          } else {
+            console.error("Failed to submit vote");
+          }
+        };
 
-  thumbsUpButton.addEventListener("click", async (event) => {
-    event.preventDefault();
-    const imageID = document.querySelector(".cat-image").src.split("/").pop(); // Get image ID from the URL
-    await sendVote(imageID, 1);
-  });
+        // Function to favourite the image
+        const favouriteImage = async (imageID) => {
+          const response = await fetch("/custom/favourite", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({ image_id: imageID }),
+          });
 
-  thumbsDownButton.addEventListener("click", async (event) => {
-    event.preventDefault();
-    const imageID = document.querySelector(".cat-image").src.split("/").pop(); // Get image ID from the URL
-    await sendVote(imageID, -1);
-  });
-});
+          if (response.ok) {
+            console.log("Image favourited successfully");
+          } else {
+            console.error("Failed to favourite image");
+          }
+        };
 
+        // Event listeners for voting
+        thumbsUpButton.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const imageID = document
+            .querySelector(".cat-image")
+            .src.split("/")
+            .pop();
+          await sendVote(imageID, 1);
+        });
+
+        thumbsDownButton.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const imageID = document
+            .querySelector(".cat-image")
+            .src.split("/")
+            .pop();
+          await sendVote(imageID, -1);
+        });
+
+        // Event listener for favs-down button
+        favsDownButton.addEventListener("click", async (event) => {
+          event.preventDefault();
+          const imageID = document
+            .querySelector(".cat-image")
+            .src.split("/")
+            .pop(); // Get image ID from the URL
+          await favouriteImage(imageID);
+        });
+      });
     </script>
   </body>
 </html>

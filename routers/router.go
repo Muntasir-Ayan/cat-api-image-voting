@@ -13,4 +13,8 @@ func init() {
 	beego.Router("/custom/breed_images", &controllers.CustomController{}, "get:GetBreedImages")
 	beego.Router("/custom/vote", &controllers.CustomController{}, "post:CreateVote")
 	beego.Router("/custom/votes", &controllers.CustomController{}, "get:GetVotes")
+
+	// New routes for favourites
+	beego.Router("/custom/favourite", &controllers.CustomController{}, "post:CreateFavourite") // For creating a favourite
+	beego.Router("/custom/favourites", &controllers.CustomController{}, "get:GetFavourites")
 }
