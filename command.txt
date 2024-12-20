@@ -19,3 +19,6 @@ bee version
 bee new mybeegoapp
 cd mybeegoapp
 bee run   'or'  go run main.go
+
+http://localhost:8080/custom/votes
+http://localhost:8080/custom/votes?limit=10&order=DESC

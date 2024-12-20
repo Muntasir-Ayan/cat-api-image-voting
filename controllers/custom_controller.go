@@ -5,9 +5,21 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"bytes"
 
 	beego "github.com/beego/beego/v2/server/web"
 )
+
+type Vote struct {
+	ImageID string `json:"image_id"`
+	Value   int    `json:"value"`
+}
+
+type VoteResponse struct {
+	ID      int    `json:"id"`
+	ImageID string `json:"image_id"`
+	Value   int    `json:"value"`
+}
 
 type CatImage struct {
 	ID  string `json:"id"`
@@ -140,6 +152,82 @@ func (c *CustomController) GetBreedImages() {
 	c.Data["json"] = images
 	c.ServeJSON()
 }
+
+func (c *CustomController) CreateVote() {
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	imageID := c.GetString("image_id")
+	voteValue, err := c.GetInt("value")
+	if err != nil || imageID == "" {
+		c.CustomAbort(http.StatusBadRequest, "Invalid vote data")
+		return
+	}
+
+	url := "https://api.thecatapi.com/v1/votes"
+
+	vote := Vote{
+		ImageID: imageID,
+		Value:   voteValue,
+	}
+
+	voteData, _ := json.Marshal(vote)
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(voteData))
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to create vote")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	c.Data["json"] = string(body) // Return response from the API
+	c.ServeJSON()
+}
+
+func (c *CustomController) GetVotes() {
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	
+	// Get query parameters
+	limit := c.GetString("limit") // No default value here
+	order := c.GetString("order", "DESC") // Default to DESC if not provided
+
+	// Construct base URL
+	url := "https://api.thecatapi.com/v1/votes"
+
+	// Add query parameters if provided
+	query := url + "?"
+	if limit != "" {
+		query += "limit=" + limit + "&"
+	}
+	query += "order=" + order
+
+	req, _ := http.NewRequest("GET", query, nil)
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch votes")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var votes []VoteResponse
+	if err := json.Unmarshal(body, &votes); err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to parse votes")
+		return
+	}
+
+	c.Data["json"] = votes
+	c.ServeJSON()
+}
+
+
 
 
 // Error handling for XMLHttpRequest

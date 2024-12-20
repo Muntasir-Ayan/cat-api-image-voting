@@ -1,51 +1,127 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f5f5f5;
-  }
-  
-  .image-container {
-    position: relative;
-    max-width: 500px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .image-container img {
-    margin: 10px;
-    width: 100%;
-    max-width: 300px;
-    height: auto;
-    border-radius: 10px;
-  }
-  
-  .nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  
-  .nav a {
-    color: #333;
-    text-decoration: none;
-    margin: 0 10px;
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-  
-  .nav a:hover {
-    background-color: #333;
-    color: #fff;
-  }
-  
+
+/* Container styling */
+.container {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Navigation Button Styling */
+.nav button {
+  margin: 5px;
+  padding: 10px;
+  background-color: #3b8b8b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.nav button:hover {
+  background-color: #2a6b6b;
+}
+
+/* Image Section Styling */
+.image-container {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.image-container img {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 10px;
+}
+
+/* Breeds Section Styling */
+#breeds-section {
+  display: none;
+  margin-top: 20px;
+}
+
+#breed-select {
+  margin: 10px 0;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+#breed-images {
+  position: relative;
+  width: 200px; /* Width of the image */
+  height: 200px; /* Height of the image */
+  overflow: hidden; /* Hide images that overflow */
+  margin: 20px auto;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+}
+
+#breed-images img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+#breed-images img.active {
+  opacity: 1; /* Show the active image */
+}
+
+/* Footer Section Styling */
+.footer.nav {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.footer.nav button {
+  margin: 5px;
+  padding: 12px;
+  background-color: #ff8c00;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.footer.nav button:hover {
+  background-color: #e07b00;
+}
+
+.footer.nav button i {
+  font-size: 20px;
+  color: white;
+}
+
+/* Dropdown and Text Styling */
+#breed-details {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#breed-details h2 {
+  font-size: 24px;
+  color: #333;
+}
+
+#breed-details p {
+  font-size: 16px;
+  color: #666;
+}
+
+#breed-details a {
+  font-size: 16px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+#breed-details a:hover {
+  text-decoration: underline;
+}
+
