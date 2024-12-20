@@ -190,9 +190,22 @@ func (c *CustomController) CreateVote() {
 
 func (c *CustomController) GetVotes() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
+	
+	// Get query parameters
+	limit := c.GetString("limit") // No default value here
+	order := c.GetString("order", "DESC") // Default to DESC if not provided
+
+	// Construct base URL
 	url := "https://api.thecatapi.com/v1/votes"
 
-	req, _ := http.NewRequest("GET", url, nil)
+	// Add query parameters if provided
+	query := url + "?"
+	if limit != "" {
+		query += "limit=" + limit + "&"
+	}
+	query += "order=" + order
+
+	req, _ := http.NewRequest("GET", query, nil)
 	req.Header.Set("x-api-key", apiKey)
 
 	client := &http.Client{}
@@ -213,6 +226,8 @@ func (c *CustomController) GetVotes() {
 	c.Data["json"] = votes
 	c.ServeJSON()
 }
+
+
 
 
 // Error handling for XMLHttpRequest
