@@ -10,16 +10,27 @@
       rel="stylesheet"
     />
     <style>
-      #breed-images {
-        display: flex;
-        overflow-x: scroll;
-        gap: 10px;
-      }
-      #breed-images .slider-image {
-        max-width: 200px;
-        height: auto;
-        border-radius: 8px;
-      }
+   #breed-images {
+    position: relative;
+    width: 200px; /* Width of the image */
+    height: 200px; /* Height of the image */
+    overflow: hidden; /* Hide images that overflow */
+    margin: 20px auto;
+    border-radius: 8px;
+  }
+
+  #breed-images img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+  }
+
+  #breed-images img.active {
+    opacity: 1; /* Show the active image */
+  }
     </style>
   </head>
   <body>
@@ -46,6 +57,12 @@
         <select id="breed-select">
           <!-- Options will be dynamically loaded here -->
         </select>
+
+        <div id="breed-images" class="slider">
+          <!-- Images will be dynamically loaded here -->
+        </div>
+
+
         <div id="breed-details">
           <h2 id="breed-name">Breed Name</h2>
           <p id="breed-origin">Origin:</p>
@@ -53,9 +70,7 @@
           <p id="breed-description">Description will appear here.</p>
           <a id="breed-wikipedia" target="_blank">Wikipedia</a>
         </div>
-        <div id="breed-images" class="slider">
-          <!-- Images will be dynamically loaded here -->
-        </div>
+
       </div>
 
       <!-- Footer Section -->
@@ -119,44 +134,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load breed details including images and information
   const loadBreedDetails = async (breedID) => {
-    const response = await fetch(`/custom/breed_images?breed_id=${breedID}`);
-    const images = await response.json();
+  const response = await fetch(`/custom/breed_images?breed_id=${breedID}`);
+  const images = await response.json();
 
-    if (images && images.length > 0) {
-      const breedInfo = images[0].breeds[0] || {};
+  if (images && images.length > 0) {
+    const breedInfo = images[0].breeds[0] || {};
 
-      // Update breed details section
-      breedDetails.querySelector("#breed-name").textContent =
-        breedInfo.name || "N/A";
-      breedDetails.querySelector("#breed-origin").textContent = `Origin: ${
-        breedInfo.origin || "Unknown"
-      }`;
-      breedDetails.querySelector("#breed-id").textContent = `ID: ${breedID}`;
-      breedDetails.querySelector("#breed-description").textContent =
-        breedInfo.description || "No description available.";
+    // Update breed details section
+    breedDetails.querySelector("#breed-name").textContent =
+      breedInfo.name || "N/A";
+    breedDetails.querySelector("#breed-origin").textContent = `Origin: ${
+      breedInfo.origin || "Unknown"
+    }`;
+    breedDetails.querySelector("#breed-id").textContent = `ID: ${breedID}`;
+    breedDetails.querySelector("#breed-description").textContent =
+      breedInfo.description || "No description available.";
 
-      // Handle the Wikipedia link
-      const wikiLink = breedInfo.wikipedia_url || "#";
-      const wikiText = breedInfo.wikipedia_url
-        ? "Wikipedia"
-        : "No Wikipedia Link";
+    // Handle the Wikipedia link
+    const wikiLink = breedInfo.wikipedia_url || "#";
+    const wikiText = breedInfo.wikipedia_url
+      ? "Wikipedia"
+      : "No Wikipedia Link";
 
-      breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
-      breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
+    breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
+    breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
 
-      // Display breed images in the sliding window
-      breedImages.innerHTML = images
-        .map(
-          (img) =>
-            `<img src="${img.url}" alt="${breedInfo.name}" class="slider-image">`
-        )
-        .join("");
-    } else {
-      breedDetails.querySelector("#breed-wikipedia").href = "#";
-      breedDetails.querySelector("#breed-wikipedia").textContent =
-        "No images found for this breed";
-    }
-  };
+    // Display breed images for the slider
+    breedImages.innerHTML = images
+      .map(
+        (img, index) =>
+          `<img src="${img.url}" alt="${breedInfo.name}" class="${
+            index === 0 ? "active" : ""
+          }">`
+      )
+      .join("");
+
+    startImageSlider(); // Start the slider
+  } else {
+    breedDetails.querySelector("#breed-wikipedia").href = "#";
+    breedDetails.querySelector("#breed-wikipedia").textContent =
+      "No images found for this breed";
+  }
+};
+
+// Function to start the image slider
+const startImageSlider = () => {
+  const images = document.querySelectorAll("#breed-images img");
+  let currentIndex = 0;
+
+  setInterval(() => {
+    // Remove the active class from the current image
+    images[currentIndex].classList.remove("active");
+
+    // Move to the next image
+    currentIndex = (currentIndex + 1) % images.length;
+
+    // Add the active class to the next image
+    images[currentIndex].classList.add("active");
+  }, 3000); // Change image every 1 second
+};
 
   // Handle change in breed selection
   breedSelect.addEventListener("change", (event) => {
