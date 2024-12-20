@@ -4,145 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cat Application</title>
-    <link rel="stylesheet" href="static/css/style.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
       rel="stylesheet"
     />
-    <style>
-      /* Container styling */
-      .container {
-        width: 80%;
-        margin: 0 auto;
-        padding: 20px;
-      }
-
-      /* Navigation Button Styling */
-      .nav button {
-        margin: 5px;
-        padding: 10px;
-        background-color: #3b8b8b;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-
-      .nav button:hover {
-        background-color: #2a6b6b;
-      }
-
-      /* Image Section Styling */
-      .image-container {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-      }
-
-      .image-container img {
-        width: 100%;
-        max-width: 600px;
-        height: auto;
-        border-radius: 10px;
-      }
-
-      /* Breeds Section Styling */
-      #breeds-section {
-        display: none;
-        margin-top: 20px;
-      }
-
-      #breed-select {
-        margin: 10px 0;
-        padding: 8px;
-        font-size: 16px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-
-      #breed-images {
-        position: relative;
-        width: 200px; /* Width of the image */
-        height: 200px; /* Height of the image */
-        overflow: hidden; /* Hide images that overflow */
-        margin: 20px auto;
-        border-radius: 8px;
-        border: 2px solid #ddd;
-      }
-
-      #breed-images img {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0;
-        transition: opacity 2s ease-in-out;
-      }
-
-      #breed-images img.active {
-        opacity: 1; /* Show the active image */
-      }
-
-      /* Footer Section Styling */
-      .footer.nav {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-      }
-
-      .footer.nav button {
-        margin: 5px;
-        padding: 12px;
-        background-color: #ff8c00;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s;
-      }
-
-      .footer.nav button:hover {
-        background-color: #e07b00;
-      }
-
-      .footer.nav button i {
-        font-size: 20px;
-        color: white;
-      }
-
-      /* Dropdown and Text Styling */
-      #breed-details {
-        margin-top: 20px;
-        text-align: center;
-      }
-
-      #breed-details h2 {
-        font-size: 24px;
-        color: #333;
-      }
-
-      #breed-details p {
-        font-size: 16px;
-        color: #666;
-      }
-
-      #breed-details a {
-        font-size: 16px;
-        color: #007bff;
-        text-decoration: none;
-      }
-
-      #breed-details a:hover {
-        text-decoration: underline;
-      }
-
-    </style>
   </head>
   <body>
     <div class="container">
       <div class="nav">
         <button id="voting-button">Voting</button>
-        <button href="#" id="breeds-button"><i class="fa-solid fa-magnifying-glass breeds"> Breeds</i></button>
+        <button href="#" id="breeds-button">
+          <i class="fa-solid fa-magnifying-glass breeds"> Breeds</i>
+        </button>
         <button href="#"><i class="fa-regular fa-heart favs">Favs</i></button>
       </div>
 
@@ -176,9 +50,15 @@
 
       <!-- Footer Section -->
       <div class="footer nav">
-        <button href="#" class="favs-down"><i class="fa-regular fa-heart"></i></button>
-        <button href="#" class="thumbs-up"><i class="fa-regular fa-thumbs-up"></i></button>
-        <button href="#" class="thumbs-down"><i class="fa-regular fa-thumbs-down"></i></button>
+        <button href="#" class="favs-down">
+          <i class="fa-regular fa-heart"></i>
+        </button>
+        <button href="#" class="thumbs-up">
+          <i class="fa-regular fa-thumbs-up"></i>
+        </button>
+        <button href="#" class="thumbs-down">
+          <i class="fa-regular fa-thumbs-down"></i>
+        </button>
       </div>
     </div>
 
@@ -201,8 +81,8 @@
 
           // Show the breeds section and hide other sections
           breedsSection.style.display = "block";
-          imageContainer.style.display = "none";  // Hide image container
-          footerNav.style.display = "none";  // Hide footer (since voting buttons aren't needed in breeds section)
+          imageContainer.style.display = "none"; // Hide image container
+          footerNav.style.display = "none"; // Hide footer (since voting buttons aren't needed in breeds section)
         });
 
         // Show Voting Section when Voting Button is clicked (if not already in voting)
@@ -210,11 +90,14 @@
           event.preventDefault();
 
           // Check if we're not already in voting section
-          if (breedsSection.style.display !== "none" || imageContainer.style.display === "none") {
+          if (
+            breedsSection.style.display !== "none" ||
+            imageContainer.style.display === "none"
+          ) {
             // Show the main container (image and footer)
             imageContainer.style.display = "block";
-            footerNav.style.display = "flex";  // Show the footer with thumbs-up, thumbs-down, and fav buttons
-            breedsSection.style.display = "none";  // Hide breeds section
+            footerNav.style.display = "flex"; // Show the footer with thumbs-up, thumbs-down, and fav buttons
+            breedsSection.style.display = "none"; // Hide breeds section
           } else {
             // If already in voting, do nothing
             console.log("Already in Voting Section");
@@ -257,7 +140,9 @@
 
           const breedSelect = document.getElementById("breed-select");
           breedSelect.innerHTML = breeds
-            .map((breed) => `<option value="${breed.id}">${breed.name}</option>`)
+            .map(
+              (breed) => `<option value="${breed.id}">${breed.name}</option>`
+            )
             .join("");
           breedSelect.value = "abys"; // Set initial breed to Abyssinian (or the ID of the breed you want as default)
 
@@ -266,7 +151,9 @@
 
         // Load breed details including images and information
         const loadBreedDetails = async (breedID) => {
-          const response = await fetch(`/custom/breed_images?breed_id=${breedID}`);
+          const response = await fetch(
+            `/custom/breed_images?breed_id=${breedID}`
+          );
           const images = await response.json();
 
           const breedDetails = document.getElementById("breed-details");
@@ -278,10 +165,12 @@
             // Update breed details section
             breedDetails.querySelector("#breed-name").textContent =
               breedInfo.name || "N/A";
-            breedDetails.querySelector("#breed-origin").textContent = `Origin: ${
-              breedInfo.origin || "Unknown"
-            }`;
-            breedDetails.querySelector("#breed-id").textContent = `ID: ${breedID}`;
+            breedDetails.querySelector(
+              "#breed-origin"
+            ).textContent = `Origin: ${breedInfo.origin || "Unknown"}`;
+            breedDetails.querySelector(
+              "#breed-id"
+            ).textContent = `ID: ${breedID}`;
             breedDetails.querySelector("#breed-description").textContent =
               breedInfo.description || "No description available.";
 
@@ -292,13 +181,16 @@
               : "No Wikipedia Link";
 
             breedDetails.querySelector("#breed-wikipedia").href = wikiLink;
-            breedDetails.querySelector("#breed-wikipedia").textContent = wikiText;
+            breedDetails.querySelector("#breed-wikipedia").textContent =
+              wikiText;
 
             // Display breed images for the slider
             breedImages.innerHTML = images
               .map(
                 (img, index) =>
-                  `<img src="${img.url}" alt="${breedInfo.name}" class="${index === 0 ? "active" : ""}">`
+                  `<img src="${img.url}" alt="${breedInfo.name}" class="${
+                    index === 0 ? "active" : ""
+                  }">`
               )
               .join("");
 
@@ -338,6 +230,41 @@
           loadBreeds();
         }
       });
+
+
+      document.addEventListener("DOMContentLoaded", () => {
+  const thumbsUpButton = document.querySelector(".thumbs-up");
+  const thumbsDownButton = document.querySelector(".thumbs-down");
+
+  const sendVote = async (imageID, value) => {
+    const response = await fetch("/custom/vote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ image_id: imageID, value: value }),
+    });
+
+    if (response.ok) {
+      console.log("Vote submitted successfully");
+    } else {
+      console.error("Failed to submit vote");
+    }
+  };
+
+  thumbsUpButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const imageID = document.querySelector(".cat-image").src.split("/").pop(); // Get image ID from the URL
+    await sendVote(imageID, 1);
+  });
+
+  thumbsDownButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const imageID = document.querySelector(".cat-image").src.split("/").pop(); // Get image ID from the URL
+    await sendVote(imageID, -1);
+  });
+});
+
     </script>
   </body>
 </html>
