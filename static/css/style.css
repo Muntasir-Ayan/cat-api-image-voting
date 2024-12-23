@@ -1,63 +1,95 @@
-
 /* Container styling */
 .container {
-  width: 80%;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Vertically center the card */
+  background-color: #f9f9f9; /* Light background for contrast */
   padding: 20px;
 }
 
+/* Card styling */
+.card {
+  /* border: 2px solid red; */
+  width: 600px ; /* Fixed card width */
+  background-color: #ffffff; /* White background */
+  border-radius: 12px; /* Rounded corners */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Soft shadow */
+  overflow: hidden; /* Ensures the card has no overflow */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 20px;
+}
+
 /* Navigation Button Styling */
+.nav {
+  width: 100%; /* Ensure buttons stretch across the card */
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px; /* Spacing below navigation */
+}
+
 .nav button {
-  margin: 5px;
+  flex: 1;
+  margin: 0 5px;
   padding: 10px;
   background-color: #3b8b8b;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px; /* Rounded buttons */
+  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 .nav button:hover {
   background-color: #2a6b6b;
+  transform: scale(1.05); /* Slight zoom on hover */
 }
 
 /* Image Section Styling */
 .image-container {
-  display: block;
+  width: 100%;
   text-align: center;
-  margin-top: 20px;
+  margin: 15px 0;
 }
 
 .image-container img {
   width: 100%;
-  max-width: 600px;
-  height: auto;
-  border-radius: 10px;
+  max-width: 500px; /* Fixed maximum size for consistency */
+  height: 200px; /* Fixed height */
+  border-radius: 10px; /* Rounded corners */
+  object-fit: cover; /* Maintain aspect ratio while cropping */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: #f0f0f0; /* Placeholder background */
 }
 
 /* Breeds Section Styling */
 #breeds-section {
-  display: none;
+  display: none; /* Initially hidden */
   margin-top: 20px;
 }
 
 #breed-select {
-  margin: 10px 0;
-  padding: 8px;
-  font-size: 16px;
+  width: 100%; /* Full width dropdown */
+  padding: 10px;
+  font-size: 14px;
   border-radius: 5px;
   border: 1px solid #ccc;
+  margin-bottom: 10px;
 }
 
 #breed-images {
   position: relative;
-  width: 200px; /* Width of the image */
-  height: 200px; /* Height of the image */
-  overflow: hidden; /* Hide images that overflow */
-  margin: 20px auto;
-  border-radius: 8px;
-  border: 2px solid #ddd;
+  width: 100%;
+  max-width: 350px;
+  height: 200px;
+  overflow: hidden;
+  margin: 10px auto;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Shadow for slider */
 }
 
 #breed-images img {
@@ -65,63 +97,90 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
-  transition: opacity 2s ease-in-out;
+  opacity: 0; /* Hidden by default */
+  transition: opacity 1.5s ease-in-out; /* Smooth fade effect */
 }
 
 #breed-images img.active {
-  opacity: 1; /* Show the active image */
+  opacity: 1; /* Show active image */
 }
 
-/* Footer Section Styling */
-.footer.nav {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.footer.nav button {
-  margin: 5px;
-  padding: 12px;
-  background-color: #ff8c00;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.footer.nav button:hover {
-  background-color: #e07b00;
-}
-
-.footer.nav button i {
-  font-size: 20px;
-  color: white;
-}
-
-/* Dropdown and Text Styling */
+/* Breed Details Styling */
 #breed-details {
-  margin-top: 20px;
+  margin-top: 10px;
   text-align: center;
 }
 
 #breed-details h2 {
-  font-size: 24px;
+  font-size: 20px;
   color: #333;
+  margin-bottom: 10px;
 }
 
 #breed-details p {
-  font-size: 16px;
+  font-size: 14px;
   color: #666;
+  margin: 5px 0;
 }
 
 #breed-details a {
-  font-size: 16px;
+  font-size: 14px;
   color: #007bff;
   text-decoration: none;
 }
 
 #breed-details a:hover {
   text-decoration: underline;
+}
+
+/* Favourites Section Styling */
+#favs-section {
+  display: none; /* Initially hidden */
+  margin-top: 20px;
+}
+
+.favs-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.favs-gallery img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow for images */
+}
+
+/* Footer Section Styling */
+.footer.nav {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.footer.nav button {
+  flex: 1;
+  margin: 0 5px;
+  padding: 12px;
+  background-color: #ff8c00;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.footer.nav button:hover {
+  background-color: #e07b00;
+  transform: scale(1.1); /* Slight zoom on hover */
+}
+
+.footer.nav button i {
+  font-size: 16px;
+  color: white;
 }
 
