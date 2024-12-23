@@ -16,9 +16,13 @@ type Vote struct {
 }
 
 type VoteResponse struct {
-	ID      int    `json:"id"`
-	ImageID string `json:"image_id"`
-	Value   int    `json:"value"`
+    ID          int       `json:"id"`
+    ImageID     string    `json:"image_id"`
+    Value       int       `json:"value"`
+    SubID       *string   `json:"sub_id,omitempty"` // Optional
+    CreatedAt   string    `json:"created_at"`      // Assuming this field is available
+    CountryCode string    `json:"country_code"`    // You can add this if required
+    Image       Image     `json:"image"`           // Nested Image struct
 }
 
 type CatImage struct {
@@ -46,7 +50,8 @@ type BreedImage struct {
 }
 
 type Image struct {
-	URL string `json:"url,omitempty"` // Or any other fields that may be present in the future
+    ID  string `json:"id"`
+    URL string `json:"url"`
 }
 
 type Favourite struct {
@@ -206,43 +211,68 @@ func (c *CustomController) CreateVote() {
 }
 
 func (c *CustomController) GetVotes() {
-	apiKey, _ := beego.AppConfig.String("catapi_key")
-	
-	// Get query parameters
-	limit := c.GetString("limit") // No default value here
-	order := c.GetString("order", "DESC") // Default to DESC if not provided
+    apiKey, _ := beego.AppConfig.String("catapi_key")
+    
+    // Get query parameters
+    limit := c.GetString("limit") // No default value here
+    order := c.GetString("order", "DESC") // Default to DESC if not provided
 
-	// Construct base URL
-	url := "https://api.thecatapi.com/v1/votes"
+    // Construct base URL
+    url := "https://api.thecatapi.com/v1/votes"
 
-	// Add query parameters if provided
-	query := url + "?"
-	if limit != "" {
-		query += "limit=" + limit + "&"
-	}
-	query += "order=" + order
+    // Add query parameters if provided
+    query := url + "?"
+    if limit != "" {
+        query += "limit=" + limit + "&"
+    }
+    query += "order=" + order
 
-	req, _ := http.NewRequest("GET", query, nil)
-	req.Header.Set("x-api-key", apiKey)
+    req, _ := http.NewRequest("GET", query, nil)
+    req.Header.Set("x-api-key", apiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch votes")
-		return
-	}
-	defer resp.Body.Close()
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        c.CustomAbort(http.StatusInternalServerError, "Failed to fetch votes")
+        return
+    }
+    defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	var votes []VoteResponse
-	if err := json.Unmarshal(body, &votes); err != nil {
-		c.CustomAbort(http.StatusInternalServerError, "Failed to parse votes")
-		return
-	}
+    body, _ := ioutil.ReadAll(resp.Body)
+    var votes []VoteResponse
+    if err := json.Unmarshal(body, &votes); err != nil {
+        c.CustomAbort(http.StatusInternalServerError, "Failed to parse votes")
+        return
+    }
 
-	c.Data["json"] = votes
-	c.ServeJSON()
+    // Add extra fields to each vote response and fetch image details
+    var formattedVotes []map[string]interface{}
+    
+    for _, vote := range votes {
+        // Fetch image details for the vote
+        imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", vote.ImageID)
+        
+        // Format each vote to match the required response structure
+        formattedVote := map[string]interface{}{
+            "id":          vote.ID,
+            "image_id":    vote.ImageID,
+            "sub_id":      vote.SubID, // SubID can be null, so handle it accordingly
+            "created_at":  vote.CreatedAt, // This assumes you have `CreatedAt` field in the `VoteResponse` struct
+            "value":       vote.Value,
+            "country_code": "JP", // You can dynamically fetch or pass this if needed, but "JP" is used as an example
+            "image": map[string]interface{}{
+                "id":  vote.ImageID,
+                "url": imageURL,
+            },
+        }
+        
+        formattedVotes = append(formattedVotes, formattedVote)
+    }
+
+    c.Data["json"] = formattedVotes
+    c.ServeJSON()
 }
+
 
 // CreateFavourite: Handle the creation of a favourite
 func (c *CustomController) CreateFavourite() {
@@ -287,10 +317,12 @@ func (c *CustomController) CreateFavourite() {
 }
 
 // GetFavourites: Fetch all favourites for the user
+// GetFavourites: Fetch all favourites for the user
 func (c *CustomController) GetFavourites() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	url := "https://api.thecatapi.com/v1/favourites"
 
+	// Fetch favourites
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("x-api-key", apiKey)
 
@@ -310,22 +342,42 @@ func (c *CustomController) GetFavourites() {
 		return
 	}
 
+	// Read and unmarshal the response body
 	body, _ := ioutil.ReadAll(resp.Body)
-	// Log the raw response body
-	fmt.Println("API Response Body:", string(body))
-
 	var favourites []FavouriteResponse
 	if err := json.Unmarshal(body, &favourites); err != nil {
 		c.CustomAbort(http.StatusInternalServerError, "Failed to parse favourites")
 		return
 	}
 
-	// Log parsed favourites to make sure it's working
-	fmt.Println("Parsed Favourites:", favourites)
+	// Add image URL to each favourite
+	var formattedFavourites []map[string]interface{}
 
-	c.Data["json"] = favourites
+	for _, fav := range favourites {
+		// Fetch the image details for the current favourite
+		imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", fav.ImageID)
+		
+		// Create the formatted favourite response
+		formattedFavourite := map[string]interface{}{
+			"id":          fav.ID,
+			"image_id":    fav.ImageID,
+			"sub_id":      fav.SubID, // May be null
+			"created_at":  fav.CreatedAt,
+			"image": map[string]interface{}{
+				"id":  fav.ImageID,
+				"url": imageURL, // Use full image URL
+			},
+		}
+
+		// Append to the formatted favourites array
+		formattedFavourites = append(formattedFavourites, formattedFavourite)
+	}
+
+	// Send the formatted response
+	c.Data["json"] = formattedFavourites
 	c.ServeJSON()
 }
+
 
 // Error handling for XMLHttpRequest
 func (c *CustomController) handleError(err error) {

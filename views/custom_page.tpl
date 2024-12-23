@@ -17,7 +17,7 @@
         <button href="#" id="breeds-button">
           <i class="fa-solid fa-magnifying-glass breeds"> Breeds</i>
         </button>
-        <button href="#"><i class="fa-regular fa-heart favs">Favs</i></button>
+        <button id="favs-button"><i class="fa-regular fa-heart favs">Favs</i></button>
       </div>
 
       <!-- Image Section -->
@@ -48,6 +48,13 @@
         </div>
       </div>
 
+      <div id="favs-section" style="display: none">
+        <!-- <h2>Your Favourite Cats</h2> -->
+        <div id="favs-gallery" class="favs-gallery">
+          <!-- Favourites images will be dynamically loaded here -->
+        </div>
+      </div>
+
       <!-- Footer Section -->
       <div class="footer nav">
         <button href="#" class="favs-down">
@@ -68,6 +75,7 @@
         const breedsButton = document.querySelector("#breeds-button");
         const votingButton = document.querySelector("#voting-button");
         const breedsSection = document.querySelector("#breeds-section");
+        const favsSection = document.querySelector("#favs-section");
         const footerNav = document.querySelector(".footer.nav");
         const imageContainer = document.querySelector(".image-container");
         const catImageElement = document.querySelector(".cat-image");
@@ -82,6 +90,7 @@
           // Show the breeds section and hide other sections
           breedsSection.style.display = "block";
           imageContainer.style.display = "none"; // Hide image container
+          favsSection.style.display = "none";
           footerNav.style.display = "none"; // Hide footer (since voting buttons aren't needed in breeds section)
         });
 
@@ -235,7 +244,19 @@
         const thumbsUpButton = document.querySelector(".thumbs-up");
         const thumbsDownButton = document.querySelector(".thumbs-down");
         const favsDownButton = document.querySelector(".favs-down"); // Favs button
+        const favsSection = document.querySelector("#favs-section");
+        const votingButton = document.querySelector("#voting-button");
 
+
+        votingButton.addEventListener("click", (event) => {
+          event.preventDefault();
+
+          // Show the breeds section and hide other sections
+          favsSection.style.display = "none";
+          // imageContainer.style.display = "none"; // Hide image container
+          // favsSection.style.display = "none";
+          // footerNav.style.display = "none"; // Hide footer (since voting buttons aren't needed in breeds section)
+        });
         const sendVote = async (imageID, value) => {
           const response = await fetch("/custom/vote", {
             method: "POST",
@@ -298,6 +319,62 @@
           await favouriteImage(imageID);
         });
       });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const favsButton = document.querySelector("#favs-button");
+  const favsSection = document.querySelector("#favs-section");
+  const favsGallery = document.querySelector("#favs-gallery");
+  const imageContainer = document.querySelector(".image-container");
+  const breedsSection = document.querySelector("#breeds-section");
+  const footerNav = document.querySelector(".footer.nav");
+
+  // Function to load favorite images
+  const loadFavs = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/custom/favourites");
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        // Clear the previous gallery content
+        favsGallery.innerHTML = "";
+
+        // Display each favorite image
+        data.forEach((fav) => {
+          const imgElement = document.createElement("img");
+          imgElement.src = fav.image.url; // Use the URL of the image
+          imgElement.alt = "Favorite Cat Image";
+          imgElement.classList.add("favs-image");
+
+          // Append to the gallery container
+          favsGallery.appendChild(imgElement);
+        });
+      } else {
+        favsGallery.innerHTML = "<p>No favorite images found.</p>";
+      }
+    } catch (error) {
+      console.error("Error loading favorite images:", error);
+      favsGallery.innerHTML = "<p>Failed to load favorites.</p>";
+    }
+  };
+
+  // Event listener for Favs button
+  favsButton.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    // Hide all other sections
+    breedsSection.style.display = "none";
+    imageContainer.style.display = "none";
+    footerNav.style.display = "none";
+
+    // Show the Favs section
+    favsSection.style.display = "block";
+
+    // Load favorite images
+    loadFavs();
+  });
+});
+
+
     </script>
   </body>
 </html>
