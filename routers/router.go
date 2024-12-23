@@ -17,4 +17,6 @@ func init() {
 	// New routes for favourites
 	beego.Router("/custom/favourite", &controllers.CustomController{}, "post:CreateFavourite") // For creating a favourite
 	beego.Router("/custom/favourites", &controllers.CustomController{}, "get:GetFavourites")
+	beego.Router("/custom/favourites/:id", &controllers.CustomController{}, "delete:DeleteFavourite")
+
 }

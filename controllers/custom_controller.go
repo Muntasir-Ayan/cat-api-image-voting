@@ -379,6 +379,41 @@ func (c *CustomController) GetFavourites() {
 }
 
 
+func (c *CustomController) DeleteFavourite() {
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	favouriteID := c.Ctx.Input.Param(":id") // Get the `id` from the URL
+
+	if favouriteID == "" {
+		c.CustomAbort(http.StatusBadRequest, "Favourite ID is required")
+		return
+	}
+
+	url := fmt.Sprintf("https://api.thecatapi.com/v1/favourites/%s", favouriteID)
+
+	req, _ := http.NewRequest("DELETE", url, nil)
+	req.Header.Set("x-api-key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to delete favourite")
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		fmt.Printf("Error: %s\nResponse: %s\n", resp.Status, string(body))
+		c.CustomAbort(http.StatusInternalServerError, "Failed to delete favourite")
+		return
+	}
+
+	c.Data["json"] = map[string]string{"message": "Favourite deleted successfully"}
+	c.ServeJSON()
+}
+
+
+
 // Error handling for XMLHttpRequest
 func (c *CustomController) handleError(err error) {
 	if c.Ctx.Input.Header("X-Requested-With") == "XMLHttpRequest" {
