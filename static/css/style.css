@@ -206,3 +206,24 @@
   color: white;
 }
 
+.image-wrapper {
+  position: relative;
+  display: inline-block; /* or whatever layout you need for the image wrapper */
+}
+
+.close-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(148, 221, 88, 0.5); /* Optional: Adds background to the button for better visibility */
+  color: white;
+  font-size: 18px;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  z-index: 10; /* Ensures the button is above the image */
+}
+
+.favs-image {
+  display: block; /* Ensures the image doesn't have extra space below it */
+}
