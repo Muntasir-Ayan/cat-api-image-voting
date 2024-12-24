@@ -317,7 +317,6 @@ func (c *CustomController) CreateFavourite() {
 }
 
 // GetFavourites: Fetch all favourites for the user
-// GetFavourites: Fetch all favourites for the user
 func (c *CustomController) GetFavourites() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	url := "https://api.thecatapi.com/v1/favourites"

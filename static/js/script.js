@@ -287,12 +287,34 @@ favsGallery.innerHTML = "<p>Failed to load favorites.</p>";
 
 // Event listener for Favs button
 favsButton.addEventListener("click", (event) => {
-event.preventDefault();
+  const gridButton = document.querySelector(".grid-btn");
+  const barButton = document.querySelector(".bar-btn");
+  const favsGallery = document.querySelector("#favs-gallery");
 
-// Hide all other sections
-breedsSection.style.display = "none";
-imageContainer.style.display = "none";
-footerNav.style.display = "none";
+
+event.preventDefault();
+  // Event listener for Grid View button
+  gridButton.addEventListener("click", () => {
+    favsGallery.classList.remove("bar-view");
+    favsGallery.classList.add("grid-view");
+  });
+
+  // Event listener for Bar View button
+  barButton.addEventListener("click", () => {
+    favsGallery.classList.remove("grid-view");
+    favsGallery.classList.add("bar-view");
+  });
+  // Hide all other sections
+  breedsSection.style.display = "none";
+  imageContainer.style.display = "none";
+  footerNav.style.display = "none";
+
+  // Show the Favs section
+  favsSection.style.display = "block";
+
+  // Reset to Grid View when Favs button is clicked
+  favsGallery.classList.remove("bar-view");
+  favsGallery.classList.add("grid-view");
 
 // Show the Favs section
 favsSection.style.display = "block";
@@ -300,6 +322,25 @@ favsSection.style.display = "block";
 // Load favorite images
 loadFavs();
 });
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const gridButton = document.querySelector(".grid-btn");
+  const barButton = document.querySelector(".bar-btn");
+  const favsGallery = document.querySelector("#favs-gallery");
+
+  // Event listener for Grid View button
+  gridButton.addEventListener("click", () => {
+    favsGallery.classList.remove("bar-view");
+    favsGallery.classList.add("grid-view");
+  });
+
+  // Event listener for Bar View button
+  barButton.addEventListener("click", () => {
+    favsGallery.classList.remove("grid-view");
+    favsGallery.classList.add("bar-view");
+  });
 });
 
 

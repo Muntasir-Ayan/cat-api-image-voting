@@ -19,7 +19,7 @@
           <button href="#" id="breeds-button">
             <i class="fa-solid fa-magnifying-glass breeds"> Breeds</i>
           </button>
-          <button id="favs-button"><i class="fa-regular fa-heart favs">Favs</i></button>
+          <button id="favs-button"><i class="fa-regular fa-heart favs"> Favs</i></button>
         </div>
   
         <!-- Image Section -->
@@ -51,7 +51,24 @@
         </div>
   
         <div id="favs-section" style="display: none">
-          <!-- <h2>Your Favourite Cats</h2> -->
+          <!-- View toggle buttons -->
+          <button class="view-btn grid-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+              <rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        
+          <button class="view-btn bar-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/>
+              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
+              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        
           <div id="favs-gallery" class="favs-gallery">
             <!-- Favourites images will be dynamically loaded here -->
           </div>
