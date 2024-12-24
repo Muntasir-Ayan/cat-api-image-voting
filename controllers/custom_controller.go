@@ -9,6 +9,10 @@ import (
 
 	beego "github.com/beego/beego/v2/server/web"
 )
+type CatImage struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
 
 type Vote struct {
 	ImageID string `json:"image_id"`
@@ -21,14 +25,11 @@ type VoteResponse struct {
     Value       int       `json:"value"`
     SubID       *string   `json:"sub_id,omitempty"` // Optional
     CreatedAt   string    `json:"created_at"`      // Assuming this field is available
-    CountryCode string    `json:"country_code"`    // You can add this if required
-    Image       Image     `json:"image"`           // Nested Image struct
+    CountryCode string    `json:"country_code"`    // Optional, if required
+	CatImage    CatImage `json:"image"`      // Reference to the CatImage struct
 }
 
-type CatImage struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
-}
+
 
 type Breed struct {
 	ID          string `json:"id"`
@@ -65,7 +66,7 @@ type FavouriteResponse struct {
 	ImageID   string   `json:"image_id"`
 	SubID     *string  `json:"sub_id,omitempty"`
 	CreatedAt string   `json:"created_at"`
-	Image     Image    `json:"image"` // Nested Image struct
+	Image       CatImage  `json:"image"`  
 }
 
 type CustomController struct {
@@ -73,39 +74,58 @@ type CustomController struct {
 }
 
 // Fetches a random cat image
+// Fetches a random cat image
 func (c *CustomController) Get() {
-	apiKey, _ := beego.AppConfig.String("catapi_key")
-	url := "https://api.thecatapi.com/v1/images/search"
+    // Retrieve API key from configuration
+    apiKey, _ := beego.AppConfig.String("catapi_key")
+    url := "https://api.thecatapi.com/v1/images/search"
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		c.handleError(err)
-		return
-	}
-	req.Header.Set("x-api-key", apiKey)
+    client := &http.Client{}
+    
+    // Create new GET request
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        c.handleError(err)
+        return
+    }
+    req.Header.Set("x-api-key", apiKey)
 
-	resp, err := client.Do(req)
-	if err != nil {
-		c.handleError(err)
-		return
-	}
-	defer resp.Body.Close()
+    // Send the request
+    resp, err := client.Do(req)
+    if err != nil {
+        c.handleError(err)
+        return
+    }
+    defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		c.handleError(err)
-		return
-	}
+    // Read the response body
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        c.handleError(err)
+        return
+    }
 
-	var catImages []CatImage
-	if err := json.Unmarshal(body, &catImages); err != nil || len(catImages) == 0 {
-		c.handleError(err)
-		return
-	}
+    // Print the raw response body for debugging
+    fmt.Println("Response Body: ", string(body)) // Debug line
 
-	c.Data["CatImageURL"] = catImages[0].URL
-	c.TplName = "custom_page.tpl"
+    // Unmarshal the response body into the catImages slice
+    var catImages []CatImage
+    if err := json.Unmarshal(body, &catImages); err != nil || len(catImages) == 0 {
+        c.handleError(err)
+        return
+    }
+
+    // Print the cat image URL for debugging
+    fmt.Println("Cat Image URL: ", catImages[0].URL) // Debug line
+
+    // Assign the URL to the template data
+    c.Data["CatImageURL"] = catImages[0].URL
+
+    // Print the assigned URL to ensure it's set correctly
+    fmt.Println("Assigned CatImageURL: ", c.Data["CatImageURL"]) // Debug line
+
+    // Set the template name for rendering
+    c.TplName = "custom_page.tpl"
 }
 
 // Fetches list of breeds
@@ -250,7 +270,7 @@ func (c *CustomController) GetVotes() {
     
     for _, vote := range votes {
         // Fetch image details for the vote
-        imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", vote.ImageID)
+        
         
         // Format each vote to match the required response structure
         formattedVote := map[string]interface{}{
@@ -262,7 +282,7 @@ func (c *CustomController) GetVotes() {
             "country_code": "JP", // You can dynamically fetch or pass this if needed, but "JP" is used as an example
             "image": map[string]interface{}{
                 "id":  vote.ImageID,
-                "url": imageURL,
+                "url": vote.CatImage.URL,
             },
         }
         
@@ -349,33 +369,27 @@ func (c *CustomController) GetFavourites() {
 		return
 	}
 
-	// Add image URL to each favourite
+	// Fetch full image details for each favourite
 	var formattedFavourites []map[string]interface{}
-
-	for _, fav := range favourites {
-		// Fetch the image details for the current favourite
-		imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", fav.ImageID)
-		
-		// Create the formatted favourite response
-		formattedFavourite := map[string]interface{}{
-			"id":          fav.ID,
-			"image_id":    fav.ImageID,
-			"sub_id":      fav.SubID, // May be null
-			"created_at":  fav.CreatedAt,
-			"image": map[string]interface{}{
-				"id":  fav.ImageID,
-				"url": imageURL, // Use full image URL
-			},
-		}
-
-		// Append to the formatted favourites array
-		formattedFavourites = append(formattedFavourites, formattedFavourite)
-	}
+for _, fav := range favourites {
+    formattedFavourite := map[string]interface{}{
+        "id":         fav.ID,
+        "image_id":   fav.ImageID,
+        "sub_id":     fav.SubID,
+        "created_at": fav.CreatedAt,
+        "image": map[string]interface{}{
+            "id":  fav.ImageID,
+            "url": fav.Image.URL, // Ensure this URL is populated
+        },
+    }
+    formattedFavourites = append(formattedFavourites, formattedFavourite)
+}
 
 	// Send the formatted response
 	c.Data["json"] = formattedFavourites
 	c.ServeJSON()
 }
+
 
 
 func (c *CustomController) DeleteFavourite() {
