@@ -249,98 +249,117 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-const favsButton = document.querySelector("#favs-button");
-const favsSection = document.querySelector("#favs-section");
-const favsGallery = document.querySelector("#favs-gallery");
-const imageContainer = document.querySelector(".image-container");
-const breedsSection = document.querySelector("#breeds-section");
-const footerNav = document.querySelector(".footer.nav");
-
-// Function to load favorite images
-const loadFavs = async () => {
-try {
-const response = await fetch("http://localhost:8080/custom/favourites");
-const data = await response.json();
-
-if (data && data.length > 0) {
-  // Clear the previous gallery content
-  favsGallery.innerHTML = "";
-
-  // Display each favorite image
-  data.forEach((fav) => {
-    const imgElement = document.createElement("img");
-    imgElement.src = fav.image.url; // Use the URL of the image
-    imgElement.alt = "Favorite Cat Image";
-    imgElement.classList.add("favs-image");
-
-    // Append to the gallery container
-    favsGallery.appendChild(imgElement);
-  });
-} else {
-  favsGallery.innerHTML = "<p>No favorite images found.</p>";
-}
-} catch (error) {
-console.error("Error loading favorite images:", error);
-favsGallery.innerHTML = "<p>Failed to load favorites.</p>";
-}
-};
-
-// Event listener for Favs button
-favsButton.addEventListener("click", (event) => {
-  const gridButton = document.querySelector(".grid-btn");
-  const barButton = document.querySelector(".bar-btn");
+  const favsButton = document.querySelector("#favs-button");
+  const favsSection = document.querySelector("#favs-section");
   const favsGallery = document.querySelector("#favs-gallery");
+  const imageContainer = document.querySelector(".image-container");
+  const breedsSection = document.querySelector("#breeds-section");
+  const footerNav = document.querySelector(".footer.nav");
 
+  // Function to load favorite images
+  const loadFavs = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/custom/favourites");
+      const data = await response.json();
 
-event.preventDefault();
-  // Event listener for Grid View button
-  gridButton.addEventListener("click", () => {
+      if (data && data.length > 0) {
+        // Clear the previous gallery content
+        favsGallery.innerHTML = "";
+
+        // Display each favorite image
+        data.forEach((fav) => {
+          const imgWrapper = document.createElement("div");
+          imgWrapper.classList.add("image-wrapper");
+
+          const imgElement = document.createElement("img");
+          imgElement.src = fav.image.url; // Use the URL of the image
+          imgElement.alt = "Favorite Cat Image";
+          imgElement.classList.add("favs-image");
+
+          const closeButton = document.createElement("button");
+          closeButton.textContent = "X";
+          closeButton.classList.add("close-btn");
+
+          // Event listener for removing image and sending delete request
+          closeButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const favouriteID = fav.id; // Get the ID of the favorite image
+
+            try {
+              const deleteResponse = await fetch(`http://localhost:8080/custom/favourites/${favouriteID}`, {
+                method: "DELETE",
+              });
+
+              if (deleteResponse.ok) {
+                // Remove the image wrapper from the gallery if the deletion is successful
+                imgWrapper.remove();
+              } else {
+                alert("Failed to delete the favorite image.");
+              }
+            } catch (error) {
+              console.error("Error deleting the favorite image:", error);
+              alert("Failed to delete the favorite image.");
+            }
+          });
+
+          // Append button and image to wrapper
+          imgWrapper.appendChild(closeButton);
+          imgWrapper.appendChild(imgElement);
+
+          // Append to the gallery container
+          favsGallery.appendChild(imgWrapper);
+        });
+      } else {
+        favsGallery.innerHTML = "<p>No favorite images found.</p>";
+      }
+    } catch (error) {
+      console.error("Error loading favorite images:", error);
+      favsGallery.innerHTML = "<p>Failed to load favorites.</p>";
+    }
+  };
+
+  // Event listener for Favs button
+  favsButton.addEventListener("click", (event) => {
+    const gridButton = document.querySelector(".grid-btn");
+    const barButton = document.querySelector(".bar-btn");
+    const favsGallery = document.querySelector("#favs-gallery");
+
+    event.preventDefault();
+
+    // Event listener for Grid View button
+    gridButton.addEventListener("click", () => {
+      favsGallery.classList.remove("bar-view");
+      favsGallery.classList.add("grid-view");
+    });
+
+    // Event listener for Bar View button
+    barButton.addEventListener("click", () => {
+      favsGallery.classList.remove("grid-view");
+      favsGallery.classList.add("bar-view");
+    });
+
+    // Hide all other sections
+    breedsSection.style.display = "none";
+    imageContainer.style.display = "none";
+    footerNav.style.display = "none";
+
+    // Show the Favs section
+    favsSection.style.display = "block";
+
+    // Reset to Grid View when Favs button is clicked
     favsGallery.classList.remove("bar-view");
     favsGallery.classList.add("grid-view");
-  });
 
-  // Event listener for Bar View button
-  barButton.addEventListener("click", () => {
-    favsGallery.classList.remove("grid-view");
-    favsGallery.classList.add("bar-view");
-  });
-  // Hide all other sections
-  breedsSection.style.display = "none";
-  imageContainer.style.display = "none";
-  footerNav.style.display = "none";
+    // Show the Favs section
+    favsSection.style.display = "block";
 
-  // Show the Favs section
-  favsSection.style.display = "block";
-
-  // Reset to Grid View when Favs button is clicked
-  favsGallery.classList.remove("bar-view");
-  favsGallery.classList.add("grid-view");
-
-// Show the Favs section
-favsSection.style.display = "block";
-
-// Load favorite images
-loadFavs();
-});
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const gridButton = document.querySelector(".grid-btn");
-  const barButton = document.querySelector(".bar-btn");
-  const favsGallery = document.querySelector("#favs-gallery");
-
-  // Event listener for Grid View button
-  gridButton.addEventListener("click", () => {
-    favsGallery.classList.remove("bar-view");
-    favsGallery.classList.add("grid-view");
-  });
-
-  // Event listener for Bar View button
-  barButton.addEventListener("click", () => {
-    favsGallery.classList.remove("grid-view");
-    favsGallery.classList.add("bar-view");
+    // Load favorite images
+    loadFavs();
   });
 });
+
+
+
+
 
 
