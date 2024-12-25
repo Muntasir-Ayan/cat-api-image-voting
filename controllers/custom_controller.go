@@ -6,13 +6,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"bytes"
-
+	// "time"
 	beego "github.com/beego/beego/v2/server/web"
 )
 
 type Vote struct {
 	ImageID string `json:"image_id"`
 	Value   int    `json:"value"`
+}
+
+type response struct {
+	data []byte
+	err  error
 }
 
 type VoteResponse struct {
@@ -113,20 +118,36 @@ func (c *CustomController) GetBreeds() {
 	apiKey, _ := beego.AppConfig.String("catapi_key")
 	url := "https://api.thecatapi.com/v1/breeds"
 
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("x-api-key", apiKey)
+	// Create a channel for the API response
+	respChannel := make(chan response)
 
-	resp, err := client.Do(req)
-	if err != nil {
+	// Use a Goroutine to fetch breeds
+	go func() {
+		client := &http.Client{}
+		req, _ := http.NewRequest("GET", url, nil)
+		req.Header.Set("x-api-key", apiKey)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			respChannel <- response{nil, err}
+			return
+		}
+		defer resp.Body.Close()
+
+		body, _ := ioutil.ReadAll(resp.Body)
+		respChannel <- response{body, nil}
+	}()
+
+	// Wait for the response from the Goroutine
+	resp := <-respChannel
+
+	if resp.err != nil {
 		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch breeds")
 		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
 	var breeds []Breed
-	if err := json.Unmarshal(body, &breeds); err != nil {
+	if err := json.Unmarshal(resp.data, &breeds); err != nil {
 		c.CustomAbort(http.StatusInternalServerError, "Failed to parse breeds")
 		return
 	}
@@ -211,66 +232,73 @@ func (c *CustomController) CreateVote() {
 }
 
 func (c *CustomController) GetVotes() {
-    apiKey, _ := beego.AppConfig.String("catapi_key")
-    
-    // Get query parameters
-    limit := c.GetString("limit") // No default value here
-    order := c.GetString("order", "DESC") // Default to DESC if not provided
+	apiKey, _ := beego.AppConfig.String("catapi_key")
+	url := "https://api.thecatapi.com/v1/votes"
+	limit := c.GetString("limit") // No default value here
+	order := c.GetString("order", "DESC") // Default to DESC if not provided
 
-    // Construct base URL
-    url := "https://api.thecatapi.com/v1/votes"
+	// Construct query URL
+	query := url + "?order=" + order
+	if limit != "" {
+		query += "&limit=" + limit
+	}
 
-    // Add query parameters if provided
-    query := url + "?"
-    if limit != "" {
-        query += "limit=" + limit + "&"
-    }
-    query += "order=" + order
+	// Create a channel for the API response
+	respChannel := make(chan response)
 
-    req, _ := http.NewRequest("GET", query, nil)
-    req.Header.Set("x-api-key", apiKey)
+	// Use a Goroutine to fetch votes
+	go func() {
+		req, _ := http.NewRequest("GET", query, nil)
+		req.Header.Set("x-api-key", apiKey)
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        c.CustomAbort(http.StatusInternalServerError, "Failed to fetch votes")
-        return
-    }
-    defer resp.Body.Close()
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			respChannel <- response{nil, err}
+			return
+		}
+		defer resp.Body.Close()
 
-    body, _ := ioutil.ReadAll(resp.Body)
-    var votes []VoteResponse
-    if err := json.Unmarshal(body, &votes); err != nil {
-        c.CustomAbort(http.StatusInternalServerError, "Failed to parse votes")
-        return
-    }
+		body, _ := ioutil.ReadAll(resp.Body)
+		respChannel <- response{body, nil}
+	}()
 
-    // Add extra fields to each vote response and fetch image details
-    var formattedVotes []map[string]interface{}
-    
-    for _, vote := range votes {
-        // Fetch image details for the vote
-        imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", vote.ImageID)
-        
-        // Format each vote to match the required response structure
-        formattedVote := map[string]interface{}{
-            "id":          vote.ID,
-            "image_id":    vote.ImageID,
-            "sub_id":      vote.SubID, // SubID can be null, so handle it accordingly
-            "created_at":  vote.CreatedAt, // This assumes you have `CreatedAt` field in the `VoteResponse` struct
-            "value":       vote.Value,
-            "country_code": "JP", // You can dynamically fetch or pass this if needed, but "JP" is used as an example
-            "image": map[string]interface{}{
-                "id":  vote.ImageID,
-                "url": imageURL,
-            },
-        }
-        
-        formattedVotes = append(formattedVotes, formattedVote)
-    }
+	// Wait for the response from the Goroutine
+	resp := <-respChannel
 
-    c.Data["json"] = formattedVotes
-    c.ServeJSON()
+	if resp.err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to fetch votes")
+		return
+	}
+
+	var votes []VoteResponse
+	if err := json.Unmarshal(resp.data, &votes); err != nil {
+		c.CustomAbort(http.StatusInternalServerError, "Failed to parse votes")
+		return
+	}
+
+	var formattedVotes []map[string]interface{}
+	for _, vote := range votes {
+		imageURL := fmt.Sprintf("https://cdn2.thecatapi.com/images/%s", vote.ImageID)
+
+		formattedVote := map[string]interface{}{
+			"id":          vote.ID,
+			"image_id":    vote.ImageID,
+			"sub_id":      vote.SubID,
+			"created_at":  vote.CreatedAt,
+			"value":       vote.Value,
+			"country_code": "JP",
+			"image": map[string]interface{}{
+				"id":  vote.ImageID,
+				"url": imageURL,
+			},
+		}
+
+		formattedVotes = append(formattedVotes, formattedVote)
+	}
+
+	c.Data["json"] = formattedVotes
+	c.ServeJSON()
 }
 
 

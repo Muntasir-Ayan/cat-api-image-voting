@@ -24,3 +24,8 @@ http://localhost:8080/custom/votes
 http://localhost:8080/custom/votes?limit=10&order=DESC
 
 curl -X DELETE http://localhost:8080/custom/favourites/232504440
+
+go test -v ./...
+
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
