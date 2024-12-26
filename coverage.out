@@ -1,5 +1,4 @@
 mode: set
-cat-api/routers/router.go:9.13,22.2 9 0
 cat-api/controllers/custom_controller.go:81.34,87.16 5 0
 cat-api/controllers/custom_controller.go:87.16,90.3 2 0
 cat-api/controllers/custom_controller.go:91.2,94.16 3 0
@@ -73,6 +72,7 @@ cat-api/controllers/custom_controller.go:445.51,446.64 1 0
 cat-api/controllers/custom_controller.go:446.64,448.3 1 0
 cat-api/controllers/custom_controller.go:448.8,451.3 2 0
 cat-api/controllers/default.go:11.32,15.2 3 0
+cat-api/routers/router.go:9.13,22.2 9 0
 cat-api/main.go:8.13,10.2 1 0
 cat-api/controllers/custom_controller.go:81.34,87.16 5 1
 cat-api/controllers/custom_controller.go:87.16,90.3 2 0

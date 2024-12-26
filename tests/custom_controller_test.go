@@ -1,6 +1,7 @@
 package tests
 
 import (
+	// "bytes"
 	"encoding/json"
 	"testing"
 	"net/http"
@@ -187,6 +188,207 @@ func TestGetBreedImages(t *testing.T) {
 
 }
 
+/**
+type Vote struct {
+	ImageID string `json:"image_id"`
+	Value   int    `json:"value"`
+}
 
+
+func TestCreateVote(t *testing.T) {
+    // Set up mock server
+    mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        assert.Equal(t, "POST", r.Method)
+        assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+        assert.Equal(t, "test_api_key", r.Header.Get("x-api-key"))
+
+        var vote Vote
+        err := json.NewDecoder(r.Body).Decode(&vote)
+        assert.NoError(t, err)
+
+        // Validate the vote data
+        if vote.ImageID == "" || vote.Value == 0 {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusBadRequest)
+            w.Write([]byte(`{"error": "Invalid vote data"}`)) // Use valid JSON
+            return
+        }
+
+        // Respond with success if validation passes
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte(`{"message": "Vote created"}`))
+    }))
+    defer mockServer.Close()
+
+    // Set the app config for the test
+    beego.AppConfig.Set("catapi_key", "test_api_key")
+    beego.AppConfig.Set("catapi_url", mockServer.URL)
+
+    // Create valid vote data
+    vote := Vote{
+        ImageID: "test_image_id",
+        Value:   1,
+    }
+
+    // Marshal the vote data
+    voteJSON, err := json.Marshal(vote)
+    assert.NoError(t, err)
+
+    // Create request with the JSON data
+    w := httptest.NewRecorder()
+    r := httptest.NewRequest("POST", "/v1/votes", bytes.NewBuffer(voteJSON))
+    r.Header.Set("Content-Type", "application/json")
+    r.Header.Set("x-api-key", "test_api_key")
+
+    ctx := context.NewContext()
+    ctx.Reset(w, r)
+
+    // Initialize the controller
+    ctrl := &controllers.CustomController{}
+    ctrl.Init(ctx, "CustomController", "CreateVote", nil)
+
+    // Call the CreateVote method, catching any panic
+    var panicValue interface{}
+    func() {
+        defer func() {
+            panicValue = recover()
+        }()
+        ctrl.CreateVote()
+    }()
+
+    // Check if we got the expected "user stop run" panic
+    if panicValue != nil {
+        if err, ok := panicValue.(error); ok {
+            assert.Equal(t, "user stop run", err.Error())
+        } else {
+            t.Logf("Unexpected panic type: %T", panicValue)
+        }
+    }
+
+    // Check the response status code and body
+    assert.Equal(t, http.StatusOK, w.Code)
+
+    var response map[string]string
+    err = json.Unmarshal(w.Body.Bytes(), &response)
+    if err != nil {
+        t.Fatalf("Failed to unmarshal response: %v\nResponse body: %s", err, w.Body.String())
+    }
+
+    // Assert the correct response message
+    assert.Equal(t, "Vote created", response["message"])
+}
+**/
+
+
+/**
+
+type Favourite struct {
+    ImageID string `json:"image_id"`
+    SubID   string `json:"sub_id,omitempty"`
+}
+
+type FavouriteResponse struct {
+    ID      string `json:"id"`
+    ImageID string `json:"image_id"`
+    SubID   string `json:"sub_id,omitempty"`
+}
+
+func TestCreateFavourite(t *testing.T) {
+    // Set up mock server
+    mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        assert.Equal(t, "POST", r.Method)
+        assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
+        assert.Equal(t, "test_api_key", r.Header.Get("x-api-key"))
+
+        body, err := ioutil.ReadAll(r.Body)
+        assert.NoError(t, err)
+
+        var fav Favourite
+        err = json.Unmarshal(body, &fav)
+        assert.NoError(t, err)
+
+        // Check if the incoming request has the expected data
+        assert.Equal(t, "test_image_id", fav.ImageID)
+        assert.Equal(t, "test_sub_id", fav.SubID)
+
+        // Respond with a success message
+        response := FavouriteResponse{
+            ID:      "favourite_123",
+            ImageID: fav.ImageID,
+            SubID:   fav.SubID,
+        }
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(response)
+    }))
+    defer mockServer.Close()
+
+    // Set the app config for the test
+    beego.AppConfig.Set("catapi_key", "test_api_key")
+    beego.AppConfig.Set("catapi_url", mockServer.URL)
+
+    // Create a request with valid data
+    w := httptest.NewRecorder()
+    r := httptest.NewRequest("POST", "/v1/favourites", bytes.NewBufferString(`{"image_id": "test_image_id", "sub_id": "test_sub_id"}`))
+    r.Header.Set("Content-Type", "application/json")
+    r.Header.Set("x-api-key", "test_api_key")
+
+    ctx := context.NewContext()
+    ctx.Reset(w, r)
+
+    // Initialize the controller
+    ctrl := &controllers.CustomController{}
+    ctrl.Init(ctx, "CustomController", "CreateFavourite", nil)
+
+    // Call the CreateFavourite method
+    ctrl.CreateFavourite()
+
+    // Check the response status code and body
+    assert.Equal(t, http.StatusOK, w.Code)
+
+    var response FavouriteResponse
+    err := json.Unmarshal(w.Body.Bytes(), &response)
+    if err != nil {
+        t.Fatalf("Failed to unmarshal response: %v\nResponse body: %s", err, w.Body.String())
+    }
+
+    // Assert the correct response values
+    assert.Equal(t, "favourite_123", response.ID)
+    assert.Equal(t, "test_image_id", response.ImageID)
+    assert.Equal(t, "test_sub_id", response.SubID)
+}
+
+func TestCreateFavouriteMissingImageID(t *testing.T) {
+    // Create a request with missing image_id
+    w := httptest.NewRecorder()
+    r := httptest.NewRequest("POST", "/v1/favourites", bytes.NewBufferString(`{"sub_id": "test_sub_id"}`))
+    r.Header.Set("Content-Type", "application/json")
+    r.Header.Set("x-api-key", "test_api_key")
+
+    ctx := context.NewContext()
+    ctx.Reset(w, r)
+
+    // Initialize the controller
+    ctrl := &controllers.CustomController{}
+    ctrl.Init(ctx, "CustomController", "CreateFavourite", nil)
+
+    // Call the CreateFavourite method
+    ctrl.CreateFavourite()
+
+    // Check the response status code
+    assert.Equal(t, http.StatusBadRequest, w.Code)
+
+    var errorResponse map[string]string
+    err := json.Unmarshal(w.Body.Bytes(), &errorResponse)
+    if err != nil {
+        t.Fatalf("Failed to unmarshal response: %v\nResponse body: %s", err, w.Body.String())
+    }
+
+    // Assert the correct error message
+    assert.Equal(t, "Image ID is required", errorResponse["error"])
+}
+
+**/
 
 
