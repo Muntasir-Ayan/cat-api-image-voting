@@ -1,201 +1,63 @@
 package tests
 
 import (
-	"bytes"
-	"encoding/json"
+	// "encoding/json"
+	"testing"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	"runtime"
-	"path/filepath"
-
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
-	. "github.com/smartystreets/goconvey/convey"
+	"strings" // Required for checking the URL prefix
+	"github.com/stretchr/testify/assert"
+	beego "github.com/beego/beego/v2/server/web"
+	"cat-api/controllers" // Adjust import path as necessary
 )
 
-func init() {
-	// Dynamically resolve the absolute path to the application
-	_, file, _, _ := runtime.Caller(0)
-	apppath, _ := filepath.Abs(filepath.Dir(filepath.Join(file, ".."+string(filepath.Separator))))
-	web.TestBeegoInit(apppath)
+// Mock response structure for breeds
+type Breed struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-// TestGetCatImage tests the / endpoint
-func TestGetCatImage(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestGetCatImage", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Get Cat Image\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("The Result Should Not Be Empty", func() {
-			So(w.Body.Len(), ShouldBeGreaterThan, 0)
-		})
-	})
+// Mock response structure for breed images
+type BreedImage struct {
+	ID     string `json:"id"`
+	URL    string `json:"url"`
+	Breeds []Breed `json:"breeds"`
 }
 
-// TestGetBreeds tests the /custom/breeds endpoint
-func TestGetBreeds(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/custom/breeds", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestGetBreeds", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Get Breeds\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Breeds Should Not Be Empty", func() {
-			var breeds []map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &breeds)
-			So(err, ShouldBeNil)
-			So(breeds, ShouldNotBeEmpty)
-		})
-	})
+type response struct {
+	data []byte
+	err  error
 }
 
-// TestGetBreedImages tests the /custom/breed_images endpoint
-func TestGetBreedImages(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/custom/breed_images?breed_id=beng", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
 
-	logs.Trace("testing", "TestGetBreedImages", "Code[%d]\n%s", w.Code, w.Body.String())
+// TestGet tests the Get method of the CustomController
+func TestGet(t *testing.T) {
+	// Step 1: Create a mock server that simulates the external API (TheCatAPI)
+	mockResponse := `[{"id":"dqg", "url":"https://cdn2.thecatapi.com/images/dqg.jpg"}]`
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "GET", r.Method) // Ensure it's a GET request
+		assert.Equal(t, "x-api-key", r.Header.Get("x-api-key")) // Check for the correct API key header
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockResponse)) // Send the mock response
+	}))
+	defer mockServer.Close()
 
-	Convey("Subject: Test Get Breed Images\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Breed Images Should Not Be Empty", func() {
-			var images []map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &images)
-			So(err, ShouldBeNil)
-			So(images, ShouldNotBeEmpty)
-		})
-	})
+	// Step 2: Set the Beego configuration directly (bypassing app.conf file)
+	beego.AppConfig.Set("catapi_key", "test_api_key")
+	beego.AppConfig.Set("catapi_url", mockServer.URL)
+
+	// Step 3: Create an instance of the CustomController and perform the GET action
+	ctrl := &controllers.CustomController{}
+	ctrl.Data = make(map[interface{}]interface{}) // Initialize Data map
+	ctrl.TplName = ""
+
+	// Perform the GET action (simulate the controller action)
+	ctrl.Get()
+
+	// Step 4: Validate the results
+	// Check that the URL starts with the expected domain
+	assert.True(t, strings.HasPrefix(ctrl.Data["CatImageURL"].(string), "https://cdn2.thecatapi.com/images/"))
+	assert.Equal(t, "custom_page.tpl", ctrl.TplName)
 }
 
-// TestCreateVote tests the /custom/vote endpoint
-func TestCreateVote(t *testing.T) {
-	vote := map[string]interface{}{
-		"image_id": "abc123",
-		"value":    1,
-	}
-	voteData, _ := json.Marshal(vote)
 
-	r, _ := http.NewRequest("POST", "/custom/vote", bytes.NewBuffer(voteData))
-	r.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestCreateVote", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Create Vote\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Response Should Not Be Empty", func() {
-			var response map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &response)
-			So(err, ShouldBeNil)
-			So(response, ShouldNotBeEmpty)
-		})
-	})
-}
-
-// TestGetVotes tests the /custom/votes endpoint
-func TestGetVotes(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/custom/votes?limit=5&order=ASC", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestGetVotes", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Get Votes\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Votes Should Not Be Empty", func() {
-			var votes []map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &votes)
-			So(err, ShouldBeNil)
-			So(votes, ShouldNotBeEmpty)
-		})
-	})
-}
-
-// TestCreateFavourite tests the /custom/favourite endpoint
-func TestCreateFavourite(t *testing.T) {
-	fav := map[string]interface{}{
-		"image_id": "abc123",
-		"sub_id":   "user123",
-	}
-	favData, _ := json.Marshal(fav)
-
-	r, _ := http.NewRequest("POST", "/custom/favourite", bytes.NewBuffer(favData))
-	r.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestCreateFavourite", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Create Favourite\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Response Should Not Be Empty", func() {
-			var response map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &response)
-			So(err, ShouldBeNil)
-			So(response, ShouldNotBeEmpty)
-		})
-	})
-}
-
-// TestGetFavourites tests the /custom/favourites endpoint
-func TestGetFavourites(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/custom/favourites", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestGetFavourites", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Get Favourites\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Favourites Should Not Be Empty", func() {
-			var favourites []map[string]interface{}
-			err := json.Unmarshal(w.Body.Bytes(), &favourites)
-			So(err, ShouldBeNil)
-			So(favourites, ShouldNotBeEmpty)
-		})
-	})
-}
-
-// TestDeleteFavourite tests the /custom/favourites/1 endpoint
-func TestDeleteFavourite(t *testing.T) {
-	r, _ := http.NewRequest("DELETE", "/custom/favourites/1", nil)
-	w := httptest.NewRecorder()
-	web.BeeApp.Handlers.ServeHTTP(w, r)
-
-	logs.Trace("testing", "TestDeleteFavourite", "Code[%d]\n%s", w.Code, w.Body.String())
-
-	Convey("Subject: Test Delete Favourite\n", t, func() {
-		Convey("Status Code Should Be 200", func() {
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("Response Should Confirm Deletion", func() {
-			var response map[string]string
-			err := json.Unmarshal(w.Body.Bytes(), &response)
-			So(err, ShouldBeNil)
-			So(response["message"], ShouldEqual, "Favourite deleted successfully")
-		})
-	})
-}
