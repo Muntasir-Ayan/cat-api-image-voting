@@ -86,6 +86,7 @@ If face any version compatibality use:
 - This will run on this url: http://localhost:8080/custom
 - You can see all favourites images: http://localhost:8080/custom/favourites
 - You can see all voted images: http://localhost:8080/custom/votes
+- You can see all Breeds: http://localhost:8080/custom/breeds
 
 ## Unit Testing
 Run unit tests to ensure the application's reliability:

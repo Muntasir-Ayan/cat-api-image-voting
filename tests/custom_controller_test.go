@@ -3,6 +3,7 @@ package tests
 import (
 	// "bytes"
 	"encoding/json"
+	// "fmt"
 	"testing"
 	"net/http"
 	"net/http/httptest"
@@ -187,6 +188,66 @@ func TestGetBreedImages(t *testing.T) {
 
 
 }
+
+
+type Vote struct {
+	ImageID string `json:"image_id"`
+	Value   int    `json:"value"`
+}
+
+
+func TestCreateVote(t *testing.T) {
+    // Mock server simulating the external API
+    mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        t.Logf("Mock server received request method: %s", r.Method)
+        t.Logf("Mock server received request headers: %+v", r.Header)
+
+        // Return 401 if API key is invalid
+        if r.Header.Get("x-api-key") != "test_api_key" {
+            t.Log("Invalid API key detected")
+            w.WriteHeader(http.StatusUnauthorized)
+            w.Write([]byte(`"AUTHENTICATION_ERROR"`)) // Keep the original string response
+            return
+        }
+
+        t.Log("Valid API key detected")
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte(`{"message":"SUCCESS","id":12345}`))
+    }))
+    defer mockServer.Close()
+
+    // Set Beego configuration for mock server
+    beego.AppConfig.Set("catapi_key", "test_api_key") // Set a valid API key
+    beego.AppConfig.Set("catapi_url", mockServer.URL)
+
+    // Create the test request and response recorder
+    formData := `image_id=test_image_id&value=1`
+    r := httptest.NewRequest("POST", "/v1/votes", strings.NewReader(formData))
+    r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+    r.Header.Set("x-api-key", "invalid_api_key") // Set an invalid API key to trigger the error
+    w := httptest.NewRecorder()
+
+    // Initialize the context and controller
+    ctx := context.NewContext()
+    ctx.Reset(w, r)
+    ctrl := &controllers.CustomController{}
+    ctrl.Init(ctx, "CustomController", "CreateVote", nil)
+
+    // Call the CreateVote method
+    ctrl.CreateVote()
+
+    // Assert the response
+    t.Logf("Response body: %s", w.Body.String())
+    assert.Equal(t, http.StatusUnauthorized, w.Code, "Expected status code 401")
+
+    // Check if the response body matches the expected string
+    assert.Equal(t, `"AUTHENTICATION_ERROR"`, w.Body.String(), "Expected AUTHENTICATION_ERROR in response")
+}
+
+
+
+// TestGetVotes tests the GetVotes method of the CustomController
 
 /**
 type Vote struct {
