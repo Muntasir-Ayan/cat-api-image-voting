@@ -5,6 +5,7 @@ import (
 	"testing"
 	"net/http"
 	"net/http/httptest"
+	// "io/ioutil"
 	"strings" // Required for checking the URL prefix
 	"github.com/stretchr/testify/assert"
 	beego "github.com/beego/beego/v2/server/web"
@@ -21,6 +22,11 @@ type Breed struct {
     ReferenceImageID string `json:"reference_image_id"`
 }
 
+type BreedImage struct {
+	ID   string `json:"id"`
+	URL  string `json:"url"`
+	Breeds []interface{} `json:"breeds"`
+}
 // TestGet tests the Get method of the CustomController
 func TestGet(t *testing.T) {
 	// Step 1: Create a mock server that simulates the external API (TheCatAPI)
@@ -112,6 +118,73 @@ func TestGetBreeds(t *testing.T) {
     actualBreeds = actualBreeds[:len(expectedBreeds)]
 
     assert.Equal(t, expectedBreeds, actualBreeds)
+}
+
+
+
+
+func TestGetBreedImages(t *testing.T) {
+	// Correct Mock Response with only 2 images and the correct structure
+	mockResponse := `[
+		{
+			"id": "image1",
+			"url": "https://example.com/image1.jpg",
+			"breeds": null
+		},
+		{
+			"id": "image2",
+			"url": "https://example.com/image2.jpg",
+			"breeds": null
+		}
+	]`
+
+	// Set up mock server -  Crucially, use mockResponse in the handler
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Logf("Received request: %s %s", r.Method, r.URL.Path)
+		t.Logf("Request headers: %+v", r.Header)
+
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "test_api_key", r.Header.Get("x-api-key"))
+		breedID := r.URL.Query().Get("breed_id")
+		assert.Equal(t, "abys", breedID)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockResponse)) // Use the mockResponse here
+	}))
+	defer mockServer.Close()
+
+	beego.AppConfig.Set("catapi_key", "test_api_key")
+	beego.AppConfig.Set("catapi_url", mockServer.URL)
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/v1/images/search?breed_id=abys", nil)
+	r.Header.Set("x-api-key", "test_api_key")
+	ctx := context.NewContext()
+	ctx.Reset(w, r)
+
+	ctrl := &controllers.CustomController{}
+	ctrl.Init(ctx, "CustomController", "GetBreedImages", nil)
+
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok && err.Error() != "user stop run" {
+				t.Fatalf("Unexpected panic: %v", r)
+			}
+		}
+	}()
+	ctrl.GetBreedImages()
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	t.Logf("Raw response body: %s", w.Body.String())
+
+	var images []BreedImage
+	err := json.Unmarshal(w.Body.Bytes(), &images)
+	if err != nil {
+		t.Fatalf("Error unmarshalling response: %v", err)
+	}
+
+
 }
 
 
