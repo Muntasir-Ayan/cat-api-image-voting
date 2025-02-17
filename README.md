@@ -76,8 +76,8 @@ If face any version compatibality use:
 
 ## Clone Repository
 ```bash
-    https://github.com/Muntasir-Ayan/beego-project.git
-    cd beego-project
+    https://github.com/Muntasir-Ayan/cat-api-image-voting.git
+    cd cat-api-image-voting
 ```
 - Run the appliation:
 ```bash
